@@ -1,28 +1,35 @@
 const WATCH_LATER_VIDEOS_SELECTOR =
-  '.playlist-items.style-scope.ytd-playlist-panel-renderer .yt-simple-endpoint.style-scope.ytd-playlist-panel-video-renderer .style-scope.ytd-thumbnail-overlay-time-status-renderer';
+  ".playlist-items.style-scope.ytd-playlist-panel-renderer .yt-simple-endpoint.style-scope.ytd-playlist-panel-video-renderer .style-scope.ytd-thumbnail-overlay-time-status-renderer";
 
 const WATCH_LATER_PREFIX_SELECTOR =
-  '#header-description > h3:nth-child(1) > yt-formatted-string > a';
+  "#header-description > h3:nth-child(1) > yt-formatted-string > a";
 
-let numberOfVideosString = '';
+const CURRENT_VIDEO_INDEX_SELECTOR =
+  "#publisher-container > div > yt-formatted-string > span:nth-child(1)";
+
+const TOTAL_VIDEO_INDEX_SELECTOR =
+  "#publisher-container > div > yt-formatted-string > span:nth-child(3)";
+
+let numberOfVideosRef = "";
 let canObserve = false;
-let originalPrefix = '';
+let originalPrefix = "";
+let currentVideoRef = "";
 
 function getTotalDuration() {
   const videoDurationSpans = Array.from(
-    document.querySelectorAll(WATCH_LATER_VIDEOS_SELECTOR),
+    document.querySelectorAll(WATCH_LATER_VIDEOS_SELECTOR)
   ).filter(
-    (timeStatus) => timeStatus.tagName === 'SPAN' && timeStatus.id === 'text',
+    (timeStatus) => timeStatus.tagName === "SPAN" && timeStatus.id === "text"
   );
 
-  if(!videoDurationSpans.length) return;
+  if (!videoDurationSpans.length) return;
 
   const videoDurationList = videoDurationSpans.map((span) =>
-    span.textContent.trim(),
+    span.textContent.trim()
   );
 
   const durationInSecondsList = videoDurationList.map((duration) =>
-    duration.split(':').reduce((acc, cur) => 60 * acc + +cur),
+    duration.split(":").reduce((acc, cur) => 60 * acc + +cur)
   );
 
   const totalDuration = durationInSecondsList.reduce((total, seconds) => {
@@ -56,28 +63,38 @@ const observer = new MutationObserver((mutationsList) => {
   if (!canObserve) return;
 
   for (const mutation of mutationsList) {
-    if (mutation.type === 'childList') {
+    if (mutation.type === "childList") {
       for (const addedNode of mutation.addedNodes) {
-        if (addedNode.nodeName === 'DIV') {
+        if (addedNode.nodeName === "DIV") {
           const items = Array.from(
-            document.querySelectorAll(WATCH_LATER_VIDEOS_SELECTOR),
+            document.querySelectorAll(WATCH_LATER_VIDEOS_SELECTOR)
           ).filter(
             (timeStatus) =>
-              timeStatus.tagName === 'SPAN' && timeStatus.id === 'text',
+              timeStatus.tagName === "SPAN" && timeStatus.id === "text"
           );
 
           const divided = document.querySelector(
-            '#publisher-container > div > yt-formatted-string > span:nth-child(3)',
+            TOTAL_VIDEO_INDEX_SELECTOR
           )?.textContent;
 
-          if (divided && divided != numberOfVideosString) {
-            numberOfVideosString = divided;
+          if (divided && divided != numberOfVideosRef) {
+            numberOfVideosRef = divided;
             getTotalDuration();
             return;
           }
 
-          if (items.length.toString() != numberOfVideosString) {
-            numberOfVideosString = items.length;
+          if (items.length.toString() != numberOfVideosRef) {
+            numberOfVideosRef = items.length;
+            getTotalDuration();
+            return;
+          }
+
+          const currentVideoIndex = document.querySelector(
+            CURRENT_VIDEO_INDEX_SELECTOR
+          ).textContent;
+
+          if (currentVideoIndex != currentVideoRef) {
+            currentVideoRef = currentVideoIndex;
             getTotalDuration();
             return;
           }

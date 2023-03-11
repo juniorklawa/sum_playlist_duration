@@ -4,7 +4,6 @@
   "manifest_version": 2,
   "permissions": ["webNavigation"],
   "description": "Simple extension to calculate your playlist duration",
-  "homepage_url": "",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
